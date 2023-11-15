@@ -72,7 +72,7 @@ CREATE TABLE StagingTable (
     sector VARCHAR(255),
     revenue VARCHAR(255),
     competitors TEXT,
-    easy_apply int
+    easy_apply varchar(5)
 );
 
 SET GLOBAL local_infile=ON;
@@ -109,14 +109,13 @@ FROM StagingTable
 WHERE job_title IS NOT NULL
 group by 1;
 
-
 -- Insert data into Job Postings table
 INSERT INTO job_postings (job_id, job_title, company_id, job_description,location,min_sal, max_sal, easy_apply)
-SELECT j.job_id, st.job_title, c.company_id, st.job_description, st.location, st.min_sal, st.max_sal,st.easy_apply
+SELECT j.job_id, st.job_title, c.company_id, st.job_description, st.location, st.min_sal, st.max_sal,
+case when st.easy_apply like 'TRUE%' THEN 1 ELSE 0 END AS easy_apply
 FROM StagingTable st join job j on st.job_title = j.job_title
 join company c on st.c_name = c.c_name
 WHERE st.job_title IS NOT NULL;
-
 
 drop table if exists numbers;
 CREATE TABLE Numbers (n INT PRIMARY KEY);
@@ -147,3 +146,75 @@ JOIN Competitor comp ON t.competitor = comp.comp_name
 ON DUPLICATE KEY UPDATE company_id = VALUES(company_id), CompetitorID = VALUES(CompetitorID);
 
 drop table stagingtable, numbers;
+
+
+-- Author: Manognya Pendyala
+-- Question: What are the details of all job postings, including their descriptions and salary estimates for any particular company?
+--         
+-- SQL Query:
+DELIMITER //
+CREATE PROCEDURE GetJobPostingsByCompanyName(IN comp_name VARCHAR(255))
+BEGIN
+    SELECT jp.*
+    FROM job_postings jp
+    INNER JOIN company ON jp.company_id = company.company_id
+    WHERE company.c_name = comp_name;
+END //
+DELIMITER ;
+
+CALL GetJobPostingsByCompanyName('KLM Careers');
+
+-- Question: How does the average estimate salary of companies vary across different industries?
+-- SQL Query:
+SELECT c.industry, (AVG(jp.min_sal)+AVG(jp.max_sal))/2 AS average_estimate_salary
+FROM company c, job_postings jp
+WHERE c.company_id = jp.company_id
+GROUP BY c.industry;
+
+-- Question: Job postings which offer the easy_apply option, and what are the associated companies?
+-- SQL Query:
+SELECT jp.*, company.c_name
+FROM job_postings jp
+INNER JOIN company ON jp.company_id = company.company_id
+WHERE jp.easy_apply = 1;
+
+-- Question: Job postings with minimun salary greater than $60000 and have easy apply option.
+-- SQL Query:
+SELECT jp.*
+FROM job_postings jp
+WHERE min_sal > 60000 and easy_apply = 1;
+
+
+-- find all jobs within a salary range
+SELECT job_id, job_title, min_sal, max_sal
+FROM job
+WHERE min_sal >= 50000 AND max_sal <= 100000; -- just an example
+
+-- list of companies in a specific sector with their highest paying jobs
+SELECT c.c_name, c.sector, j.job_title, MAX(j.max_sal) as highest_salary
+FROM company c
+JOIN job_postings jp ON c.company_id = jp.company_id
+JOIN job j ON jp.job_id = j.job_id
+WHERE c.sector = 'Information Technology' -- for example
+GROUP BY c.c_name, j.job_title
+ORDER BY highest_salary DESC;
+
+-- retrieve job postings with ratings above a certain threshold
+SELECT j.job_title, j.avg_rating, jp.job_description
+FROM job j
+JOIN job_postings jp ON j.job_id = jp.job_id
+WHERE j.avg_rating > 4.5; -- just an example
+
+-- find competitors for a given company
+SELECT c.c_name, comp.comp_name
+FROM CompanyCompetitors cc
+JOIN company c ON cc.company_id = c.company_id
+JOIN Competitor comp ON cc.CompetitorID = comp.CompetitorID
+WHERE c.c_name = 'Specific Company Name';
+
+-- get all job postings with a min salary above average
+SELECT jp.*
+FROM job_postings jp
+JOIN job j ON jp.job_id = j.job_id
+WHERE j.min_sal > (SELECT AVG(min_sal) FROM job);
+
