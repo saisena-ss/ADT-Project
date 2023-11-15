@@ -28,6 +28,7 @@ CREATE TABLE job (
     avg_rating DECIMAL(2,1));
 
 CREATE TABLE job_postings(
+	jp_id int auto_increment PRIMARY KEY,
 	job_id int,
     job_title varchar(255) not null,
     company_id int,
@@ -51,7 +52,6 @@ CREATE TABLE CompanyCompetitors (
     FOREIGN KEY (company_id) REFERENCES company(company_id),
     FOREIGN KEY (CompetitorID) REFERENCES Competitor(CompetitorID)
 );
-
 
 -- Author Sai Sena
 -- staging table
@@ -210,7 +210,8 @@ SELECT c.c_name, comp.comp_name
 FROM CompanyCompetitors cc
 JOIN company c ON cc.company_id = c.company_id
 JOIN Competitor comp ON cc.CompetitorID = comp.CompetitorID
-WHERE c.c_name = 'Specific Company Name';
+WHERE c.c_name like 'Amazon%';
+
 
 -- get all job postings with a min salary above average
 SELECT jp.*
