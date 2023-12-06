@@ -11,7 +11,8 @@ drop table if exists company;
 CREATE TABLE company (
 	company_id int auto_increment PRIMARY KEY,
     c_name varchar(255) not null,
-    founded year,
+    -- rating decimal(2,1),
+    founded varchar(5),
     headquarters varchar(255),
     size varchar(50),
     revenue varchar(100),
@@ -19,7 +20,9 @@ CREATE TABLE company (
     industry varchar(255),
     sector varchar(255)
     );
-    
+-- alter table company modify founded varchar(5);
+select * from company where c_name like '%Abbo%';
+
 CREATE TABLE job (
 	job_id int auto_increment PRIMARY KEY,
     job_title varchar(255) not null,
@@ -39,6 +42,23 @@ CREATE TABLE job_postings(
     easy_apply int,
     FOREIGN KEY (job_id) REFERENCES job(job_id),
     FOREIGN KEY (company_id) REFERENCES company(company_id));
+
+SELECT CONSTRAINT_NAME 
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE TABLE_NAME = 'job_postings' AND TABLE_SCHEMA = 'datajobnexus';
+
+ALTER TABLE job_postings DROP FOREIGN KEY job_postings_ibfk_1;
+ALTER TABLE job_postings DROP FOREIGN KEY job_postings_ibfk_2;
+
+ALTER TABLE job_postings
+-- ADD FOREIGN KEY (job_id) REFERENCES job(job_id) ON DELETE CASCADE,
+ADD FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE;
+
+select * from job_postings where company_id = 2;
+select * from job;
+select jp.*,c_name,c.industry,c.sector from job_postings jp natural join company c;
+
+select * from companycompetitors;
 
 CREATE TABLE Competitor (
     CompetitorID INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,14 +97,26 @@ CREATE TABLE StagingTable (
 
 SET GLOBAL local_infile=ON;
 
+-- SHOW VARIABLES LIKE 'my%';
+
 LOAD DATA LOCAL INFILE 'C:/Users/saise/OneDrive - Indiana University/D532 - ADT/Project/DataAnalyst_FINAL.csv'
 INTO TABLE StagingTable
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES; 
-
+/**
+ALTER TABLE company
+ADD COLUMN rating VARCHAR(5);
+**/
 SET SQL_SAFE_UPDATES = 0;
+/*
+UPDATE StagingTable
+SET c_name = SUBSTRING(c_name, 1, LOCATE('\n', c_name) - 1)
+WHERE LOCATE('\n', c_name) > 0;
+
+select * from StagingTable;
+*/
 
 update stagingtable set sector='Information Technology',
 size= '1 to 50 employees',
@@ -96,10 +128,11 @@ where c_name like 'Eleven Recr%';
 -- Normalize data
 -- Insert data into Company table
 INSERT INTO company (c_name, founded, headquarters, size, revenue, ownership_type, industry,sector)
-SELECT DISTINCT c_name, founded, headquarters, Size, revenue, ownership_type, industry,sector
+SELECT DISTINCT c_name,founded, headquarters, Size, revenue, ownership_type, industry,sector
 FROM StagingTable
 WHERE c_name IS NOT NULL;
 
+-- select * from Stagingtable where c_name='Randstad';
 update company set founded=null where founded=0;
 
 -- Insert data into Job table
@@ -116,6 +149,8 @@ case when st.easy_apply like 'TRUE%' THEN 1 ELSE 0 END AS easy_apply
 FROM StagingTable st join job j on st.job_title = j.job_title
 join company c on st.c_name = c.c_name
 WHERE st.job_title IS NOT NULL;
+
+select * from job_postings;
 
 drop table if exists numbers;
 CREATE TABLE Numbers (n INT PRIMARY KEY);
@@ -147,6 +182,7 @@ ON DUPLICATE KEY UPDATE company_id = VALUES(company_id), CompetitorID = VALUES(C
 
 drop table stagingtable, numbers;
 
+select * from job_postings;
 
 -- Author: Manognya Pendyala
 -- Question: What are the details of all job postings, including their descriptions and salary estimates for any particular company?
@@ -219,3 +255,4 @@ FROM job_postings jp
 JOIN job j ON jp.job_id = j.job_id
 WHERE j.min_sal > (SELECT AVG(min_sal) FROM job);
 
+select * from company;
