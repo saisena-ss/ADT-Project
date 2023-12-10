@@ -3,9 +3,6 @@ import pandas as pd
 import db_utils
 import time
 
-from st_aggrid import AgGrid
-from st_aggrid.grid_options_builder import GridOptionsBuilder
-
 def show_company(mysql):
     if 'delete_confirmed' not in st.session_state:
         st.session_state.delete_confirmed = False
