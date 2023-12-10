@@ -4,13 +4,13 @@ import pandas as pd
 import pandas as pd
 # import requests
 from components import job_postings,dashboard,company,job_statistics
-
+import os
 # Database connection function
 def get_db_connection():
     return mysql.connector.connect(
         host='adtproject.mysql.database.azure.com',
         user='adtproject',
-        password='P@ssword',
+        password=os.environ.get('db_password'),
         database='datajobnexus')
 
 with get_db_connection() as mysql:
