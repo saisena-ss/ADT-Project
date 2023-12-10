@@ -2,7 +2,7 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 import pandas as pd
-import requests
+# import requests
 from components import job_postings,dashboard,company,job_statistics
 
 # Database connection function
