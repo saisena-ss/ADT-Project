@@ -21,7 +21,6 @@ CREATE TABLE company (
     sector varchar(255)
     );
 -- alter table company modify founded varchar(5);
-select * from company where c_name like '%Abbo%';
 
 CREATE TABLE job (
 	job_id int auto_increment PRIMARY KEY,
@@ -54,11 +53,6 @@ ALTER TABLE job_postings
 -- ADD FOREIGN KEY (job_id) REFERENCES job(job_id) ON DELETE CASCADE,
 ADD FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE;
 
-select * from job_postings where company_id = 2;
-select * from job;
-select jp.*,c_name,c.industry,c.sector from job_postings jp natural join company c;
-
-select * from companycompetitors;
 
 CREATE TABLE Competitor (
     CompetitorID INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,6 +66,20 @@ CREATE TABLE CompanyCompetitors (
     FOREIGN KEY (company_id) REFERENCES company(company_id),
     FOREIGN KEY (CompetitorID) REFERENCES Competitor(CompetitorID)
 );
+
+SELECT CONSTRAINT_NAME 
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE TABLE_NAME = 'CompanyCompetitors' AND TABLE_SCHEMA = 'datajobnexus';
+
+
+ALTER TABLE CompanyCompetitors DROP FOREIGN KEY companycompetitors_ibfk_1;
+ALTER TABLE CompanyCompetitors DROP FOREIGN KEY companycompetitors_ibfk_2;
+
+ALTER TABLE CompanyCompetitors
+ADD FOREIGN KEY (CompetitorID) REFERENCES Competitor(CompetitorID) ON DELETE CASCADE,
+ADD FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE;
+
+select count(*) from company;
 
 -- Author Sai Sena
 -- staging table

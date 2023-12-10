@@ -8,9 +8,9 @@ from components import job_postings,dashboard,company,job_statistics
 # Database connection function
 def get_db_connection():
     return mysql.connector.connect(
-        host='127.0.0.1',
-        user='root',
-        password='root',
+        host='adtproject.mysql.database.azure.com',
+        user='adtproject',
+        password='P@ssword',
         database='datajobnexus')
 
 with get_db_connection() as mysql:
